@@ -1,7 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digit Recognition", "Digit Recognition\Digit Recognition.csproj", "{98611C22-DB80-4776-AB3F-F4DE556066D8}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.DigitRecognition", "FSharp.DigitRecognition\FSharp.DigitRecognition.fsproj", "{853553BD-56D2-48BF-9550-6D11E98A24D7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +17,10 @@ Global
 		{98611C22-DB80-4776-AB3F-F4DE556066D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98611C22-DB80-4776-AB3F-F4DE556066D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98611C22-DB80-4776-AB3F-F4DE556066D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{853553BD-56D2-48BF-9550-6D11E98A24D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{853553BD-56D2-48BF-9550-6D11E98A24D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{853553BD-56D2-48BF-9550-6D11E98A24D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{853553BD-56D2-48BF-9550-6D11E98A24D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
