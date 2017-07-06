@@ -5,14 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>853553bd-56d2-48bf-9550-6d11e98a24d7</ProjectGuid>
+    <ProjectGuid>67ad49a7-f2cf-4a0f-83f9-2c527c6423bd</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>FSharp.DigitRecognition</RootNamespace>
-    <AssemblyName>FSharp.DigitRecognition</AssemblyName>
+    <RootNamespace>SpamFilter</RootNamespace>
+    <AssemblyName>SpamFilter</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Name>FSharp.DigitRecognition</Name>
+    <Name>SpamFilter</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,7 +22,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\FSharp.DigitRecognition.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\SpamFilter.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,7 +31,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\FSharp.DigitRecognition.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\SpamFilter.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Library1.fs" />
     <None Include="Script.fsx" />
   </ItemGroup>
   <PropertyGroup>

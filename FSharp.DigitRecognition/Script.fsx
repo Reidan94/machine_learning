@@ -33,12 +33,12 @@ let train (trainingData:Observation[]) (dist:Distance) =
     classify
 
 // Chose correct path
-let trainingPath = @"E:\OpenSource\Repository\Machine Learning 2\trainingsample.csv"
+let trainingPath = __SOURCE_DIRECTORY__ + @"\trainingsample.csv"
 let trainingData = reader trainingPath  
 let classifierManhattan  = train trainingData manhattanDistance
 let classifierEuclidean = train trainingData euclideanDistance
 
-let validationPath = @"E:\OpenSource\Repository\Machine Learning 2\validationsample.csv"
+let validationPath = __SOURCE_DIRECTORY__ + @"\validationsample.csv"
 let validationData = reader validationPath
 validationData
 |> Array.averageBy (fun x-> if classifierEuclidean x.Pixels = x.Label then 100. else 0.)
