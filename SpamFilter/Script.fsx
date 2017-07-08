@@ -23,4 +23,20 @@ let dataset =
     File.ReadAllLines fileName
     |> Array.map parseLine
 
+let spamWithFree = 
+    dataset
+    |> Array.filter (fun(docType,_)-> docType = Spam)
+    |> Array.filter (fun(_,sms)->sms.Contains("FREE"))
+    |> Array.length 
+
+printfn "Spam with free %d" spamWithFree
+
+let normalWithFree =
+    dataset
+    |> Array.filter (fun (docType, _)->docType = Normal)
+    |> Array.filter (fun (_, sms)->sms.Contains("FREE"))
+    |> Array.length
+
+printfn "Normal with free %d" normalWithFree
+
 Console.WriteLine()
