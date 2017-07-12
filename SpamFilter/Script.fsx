@@ -112,7 +112,12 @@ let allTokens =
     |> Seq.map snd
     |> vocabulary tokenizer
 
-let txtClassifier = train training tokenizer allTokens
+let casedTokens = 
+    training
+    |> Seq.map snd
+    |> vocabulary casedTokenizer
+
+let txtClassifier = train training casedTokenizer casedTokens
 validation
      |> Array.map (fun (msgType, txt) -> msgType, txtClassifier txt)
      |> Array.averageBy (fun (realMsgType, predictedMsgType) -> if realMsgType = predictedMsgType then 100.0 else 0.0) 
@@ -125,5 +130,73 @@ let evaulate (tokenizer:Tokenaizer) (tokens: Token Set) =
        |> Array.averageBy (fun (realMsgType, predictedMsgType) -> if realMsgType = predictedMsgType then 100.0 else 0.0) 
        |> printfn "Correct: %.3f"
 
+let top n (tokenizer:Tokenaizer) (docs:string[]) = 
+    let tokenized = docs|>Array.map tokenizer
+    let tokens = tokenized|>Set.unionMany 
+    tokens
+    |> Seq.sortBy (fun t -> - countIn tokenized t)
+    |> Seq.take n
+    |> Set.ofSeq
+
+let rareTokens n (tokenizer:Tokenaizer) (docs:string[]) = 
+    let tokenized = docs|> Array.map tokenizer
+    let tokens = tokenized|> Set.unionMany
+    tokens
+    |> Seq.sortBy (fun t-> countIn tokenized t)
+    |> Seq.take n
+    |> Set.ofSeq
+
+let ham, spam =
+    let rawHam, rawSpam = training|> Array.partition (fun (lbl, _)-> lbl = Normal)
+    rawHam |> Array.map snd,
+    rawSpam|> Array.map snd
+
+let hamCount = ham|> vocabulary casedTokenizer|> Set.count
+let spamCount = spam|> vocabulary casedTokenizer|> Set.count
+
+let topHam = ham|> top (hamCount / 10) casedTokenizer
+let topSpam = spam|> top (spamCount/10) casedTokenizer
+let topTokens = Set.union topHam topSpam
+let commonTokens = Set.intersect topHam topSpam
+let specificTokens = Set.difference topTokens commonTokens
+let phoneWords = Regex (@"0[7-9]\d{9}")
+let phone (text:string) = 
+    match (phoneWords.IsMatch text) with 
+    | true -> "__PHONE__"
+    | false -> text
+
+let txtCode = Regex(@"\b\d{5}\b")
+let txt (text:string) = 
+    match (txtCode.IsMatch text) with
+    | true -> "__TXT__"
+    | false -> text
+
+let smartTokenizer =  casedTokenizer >> Set.map phone >> Set.map txt
+
+specificTokens.Add "__PHONE__"
+specificTokens.Add "__TXT__"
+
 evaulate tokenizer allTokens
+evaulate casedTokenizer topTokens
+evaulate smartTokenizer specificTokens
+
+let lengthAnalysis len = 
+    let long (msg:string) = msg.Length> len
+    let ham, spam = dataset|> Array.partition (fun (label,_)->label = Normal)
+    let spamAndLongCount = spam|> Array.filter (fun (_, txt) -> long txt)|> Array.length
+    let longCount = dataset|> Array.filter (fun (_, txt)->long txt)|>Array.length 
+    let pSpam = float (spam.Length)/ float(dataset.Length)
+    let pLong = float (longCount)/float(dataset.Length)
+    let pLongInSpam = (float) spamAndLongCount / float(spam.Length)
+    let pSpamIfLong = (pSpam * pLongInSpam)/pLong
+    pSpamIfLong
+
+for i in 1..160 do
+    printfn "i - %d %.3f" i (lengthAnalysis i)
+
+Console.WriteLine("Started")
+Console.Write("Ham")
+ham|> top 20 casedTokenizer |> Seq.iter (printfn "%s ")
+Console.Write("Spam")
+spam|> top 20 casedTokenizer |> Seq.iter (printfn "%s ") 
 Console.WriteLine("Finished!")
