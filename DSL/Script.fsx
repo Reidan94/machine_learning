@@ -78,7 +78,35 @@ open Deedle
 //let ``The Price Should Be Positive`` g = g > 0
 //if ``The Price Should Be Positive`` 20 then printfn "OK" else printfn "NOT OK"
 
+let mutable m = 12
+m <- 1212
+
 let wb = WorldBankData.GetDataContext()
+let something = series [for c in wb.Countries -> c.Code, c.Indicators.``Adults (ages 15+) newly infected with HIV``.[2010]]
+let datagram = frame ["Something", something]
+datagram?Code2 <- datagram.RowKeys
+let mapV2 = R.joinCountryData2Map(datagram, "ISO3", "Code2")
+R.mapCountryData(mapV2, "Something")
+
+
+for i2 in something.GetObservations() do
+    printfn "Observation key - %s" i2.Key
+    printfn "Observation value - %f" i2.Value
+
+
+for i in wb.Regions do
+    printfn "Region - %s" i.Name
+    if (i.Countries|>Seq.length) > 0 then 
+        printfn "Countries in regions:"
+        for j in i.Countries do
+            printfn "\t%s" j.Name   
+
+let pop9000 = [for i in wb.Countries -> i.Indicators.``Bank capital to total assets (%)``.[2010]]
+R.summary(pop9000) |> R.print
+let x = [9.0; 8.0;7.0;11.0]
+let y = [11.0;9.0;9.0;2.0]
+R.plot(x,y)
+
 let pop2000 = [for i in wb.Countries -> i.Indicators.``Population, total``.[2000]]
 let pop2010 = [for i in wb.Countries -> i.Indicators.``Population, total``.[2010]]
 
@@ -119,6 +147,7 @@ let surface = series [for c in wb.Countries->c.Code, c.Indicators.``Surface area
 let ddf = frame ["Pop2000", population2000
                  "Pop2010", population2010
                  "Surface", surface]
+
 
 ddf?Code <- ddf.RowKeys
 let map = R.joinCountryData2Map(ddf, "ISO3", "Code")
