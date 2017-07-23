@@ -13,6 +13,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DSL", "DSL\DSL.fsproj", "{3
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BikeServicePrediction", "BikeServicePrediction\BikeServicePrediction.fsproj", "{78636E9D-CCFE-47C9-95D1-CE394409E842}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LinearRegression", "LinearAlgebra\LinearRegression.fsproj", "{157DCC02-038A-476D-BA0F-21445FD23322}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{78636E9D-CCFE-47C9-95D1-CE394409E842}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78636E9D-CCFE-47C9-95D1-CE394409E842}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78636E9D-CCFE-47C9-95D1-CE394409E842}.Release|Any CPU.Build.0 = Release|Any CPU
+		{157DCC02-038A-476D-BA0F-21445FD23322}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{157DCC02-038A-476D-BA0F-21445FD23322}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{157DCC02-038A-476D-BA0F-21445FD23322}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{157DCC02-038A-476D-BA0F-21445FD23322}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
