@@ -6,6 +6,11 @@ open FSharp.Charting
 open MathNet
 open MathNet.Numerics.LinearAlgebra
 open MathNet.Numerics.LinearAlgebra.Double
+//
+System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
+open MathNet.Numerics
+open MathNet.Numerics.Providers.LinearAlgebra.Mkl
+Control.LinearAlgebraProvider <- MklLinearAlgebraProvider()
 
 type Data = CsvProvider<"day.csv">
 let dataset = Data.Load("day.csv")
@@ -35,6 +40,28 @@ let shuffle(arr:'a []) =
 let exampleFeaturizer (obs:Obs) = 
      [1.0; float obs.Instant]
 
+let featurizer2(obs:Obs) = 
+    [
+       1.0
+       obs.Instant|>float
+       obs.Hum|>float
+       obs.Temp|>float
+       obs.Windspeed|>float
+       (if obs.Weekday = 1 then 1.0 else 0.0)
+       (if obs.Weekday = 2 then 1.0 else 0.0)
+       (if obs.Weekday = 3 then 1.0 else 0.0)
+       (if obs.Weekday = 4 then 1.0 else 0.0)
+       (if obs.Weekday = 5 then 1.0 else 0.0)
+       (if obs.Weekday = 6 then 1.0 else 0.0)
+    ]   
+
+let squareFeaturizer(obs:Obs)=
+    [
+       1.0
+       obs.Temp|>float
+       obs.Temp*obs.Temp|>float
+    ]
+
 let cost(theta:Vec)(Y:Vec)(X:Mat) =  
     let ps = Y - theta * X.Transpose()
     ps * ps |> sqrt
@@ -43,7 +70,7 @@ let predict (theta:Vec)(v:Vec) =
     theta * v 
 
 let predictor (f:Featurizer) (theta:Vec) = 
-    f>>vector>>((*) theta)
+    f>>vector>>(*)theta
 
 let estimate(Y:Vec)(X:Mat) = 
     (X.Transpose() * X).Inverse() * X.Transpose() * Y
@@ -60,9 +87,6 @@ let model(f:Featurizer)(data:Obs seq) =
 
 [<EntryPoint>]
 let main argv =     
-    let X = matrix [for obs in data -> [1.; float obs.Instant]]
-    let Y = vector [for obs in data ->  float obs.Cnt]
-    let theta = vector [4.;6.5]
     let training, validation = 
         let shuffled = data|>Seq.toArray|>shuffle
         let size = int (0.7 * (float shuffled.Length))
@@ -70,19 +94,19 @@ let main argv =
         shuffled.[size+1..]
 
     let (theta0, model0) = model exampleFeaturizer training
-    evaulate model0 training |> printfn "Training set evaulation - %.4f"
-    evaulate model0 validation |> printfn "Validation set evaulation - %.4f"
+    let (theta2, model2) = model featurizer2 training
+    let (theta3, model3) = model squareFeaturizer training
+
+    evaulate model3 training |> printfn "Training set evaulation - %.4f"
+    evaulate model3 validation |> printfn "Validation set evaulation - %.4f"
 
     let chart =  (Chart.Combine [
-                     Chart.Line [for obs in data -> float obs.Cnt]
-                     Chart.Line [for obs in data -> model0 obs] 
+//                     Chart.Line [for obs in data -> float obs.Cnt]
+                     Chart.Line [for obs in data -> model2 obs] 
                  ]).ShowChart()
     System.Windows.Forms.Application.Run(chart)
     ignore (Console.ReadLine())
-    printfn "%.3f" (predict theta (X.Row(0)))
     ignore (Console.ReadLine())
-    let ps = theta * theta
-    printfn "%.3f" ps
 //    printfn "C - %.3f" C
     ignore (Console.ReadLine())
 //    for i in C do
