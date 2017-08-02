@@ -131,22 +131,40 @@ let checkBestCluster() =
   System.Windows.Forms.Application.Run(chart)
 
 
-let (bestClusters, bestClassifier) = 
-    let clustering = clusterize distance centroidOf
-    let k = 10
-    seq {
-      for _i in [1..20] ->
-         clustering observations1 k
-    }
-    |> Seq.minBy (fun (cs, f)-> RSS observations1 (cs|>Seq.map snd))
+//let (bestClusters, bestClassifier) = 
+//    let clustering = clusterize distance centroidOf
+//    let k = 10
+//    seq {
+//      for _i in [1..20] ->
+//         clustering observations1 k
+//    }
+//    |> Seq.minBy (fun (cs, f)-> RSS observations1 (cs|>Seq.map snd))
  
+open MathNet.Numerics.Statistics
 [<EntryPoint>]
-let main argv = 
-    bestClusters|> Seq.iter (fun (id,profile) ->
-            printfn "CLUSTER %i" id
-            profile 
-            |> Array.iteri (fun i value -> 
-               if value > 0.2 then printfn "%16s %.1f" headers.[i] value))
+let main argv =
+    let feats = headers.Length
+    let correlations =
+     observations
+     |> Matrix.Build.DenseOfColumnArrays
+     |> Matrix.toRowArrays
+     |> Correlation.PearsonMatrix
+    let correlated =
+        [
+           for col in 0 .. (feats - 1) do
+           for row in (col + 1) .. (feats - 1) ->
+                correlations.[col,row], headers.[col], headers.[row]
+        ]
+        |> Seq.sortBy (fun (corr, f1, f2) -> - abs corr)
+        |> Seq.take 20
+        |> Seq.iter (fun (corr, f1, f2) ->
+               printfn "%s %s : %.2f" f1 f2 corr)
+    ignore(Console.ReadLine())
+//    bestClusters|> Seq.iter (fun (id,profile) ->
+//            printfn "CLUSTER %i" id
+//            profile 
+//            |> Array.iteri (fun i value -> 
+//               if value > 0.2 then printfn "%16s %.1f" headers.[i] value))
     ignore (Console.ReadLine())
     ignore (checkBestCluster())
     ignore (performClusterization())
