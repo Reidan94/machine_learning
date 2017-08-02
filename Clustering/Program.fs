@@ -11,6 +11,7 @@ open MathNet.Numerics.LinearAlgebra.Double
 System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 open MathNet.Numerics
 open MathNet.Numerics.Providers.LinearAlgebra.Mkl
+// move calculations to gpu
 Control.LinearAlgebraProvider <- MklLinearAlgebraProvider()
 
 let folder = __SOURCE_DIRECTORY__
@@ -21,7 +22,20 @@ let headers, observations =
     let observations = raw.[1..]|>Array.map (fun line-> (line.Split ',').[1..])|>Array.map (Array.map float)
     headers, observations
 
+type Observation = float[]
+let features = headers.Length
+
+let rowNormalizer(obs:Observation):Observation = 
+    let max = obs|>Seq.max
+    obs|> Array.map (fun tagUse -> tagUse/max)
+
+let observations1 = observations
+                    |>Array.map (Array.map float)
+                    |>Array.filter (fun x->Array.sum x > 0.)
+                    |>Array.map rowNormalizer
+
 let labels = ChartTypes.LabelStyle(Interval=0.25)
+
 
 let pickFrom size k = 
     let rng = System.Random()
@@ -42,7 +56,7 @@ let clusterize distance centroidOf observations k =
     let rec search(assignments, centroids) = 
         let classifier observation = centroids|> Array.minBy (fun (_,centroid) -> distance observation centroid)|>fst
         let assignments' = assignments
-                           |> Array.map (fun (_,observation)->
+                            |> Array.map (fun (_,observation)->
                             let closestCendtroidId = classifier observation
                             (closestCendtroidId, observation))
         let changed = (assignments, assignments')
@@ -57,19 +71,27 @@ let clusterize distance centroidOf observations k =
     let initialValues = initialize observations k
     search initialValues
 
-type Observation = float[]
-let features = headers.Length
-
 let distance(obs1:Observation)(obs2:Observation) = 
     (obs1,obs2)
     ||>Seq.map2 (fun u1 u2 -> pown (u1-u2) 2)
     |>Seq.sum
 
+let squareError(obs1:Observation)(obs2:Observation) = 
+    distance obs1 obs2
+
 let centroidOf(cluster:Observation seq) = 
     Array.init features (fun f -> cluster|> Seq.averageBy(fun user -> user.[f]))
 
+let ruleOfThumb(n:int) = sqrt(float n/2.)
+let k_ruleOfThumb = ruleOfThumb(observations1.Length)
+let RSS(dataset:Observation[]) centroids = 
+    dataset|> Seq.sumBy(fun obs -> centroids|> Seq.map (squareError obs)|> Seq.min)
+let AIC (dataset:Observation[]) centroids = 
+    let k = centroids|>Seq.length
+    let m = dataset.[0]|>Seq.length
+    RSS dataset centroids + float (2*m*k)
+
 let performClusterization() = 
-    let observations1 = observations|>Array.map (Array.map float)|>Array.filter (fun x->Array.sum x > 0.)
     let (clusters, classifier) = 
          let clustering = clusterize distance centroidOf
          let k = 5
@@ -79,6 +101,8 @@ let performClusterization() =
                             clusterInfo
                             |>Array.iteri (fun i value -> printfn "%16s %.1f" headers.[i] value))
 
+    observations1|> Seq.countBy (fun obs->classifier obs)|>Seq.iter (fun (clusterId, count)->printfn "ClusterId - %i. Count - %i" clusterId count)
+    ignore(Console.ReadLine())
     let chart = (Chart.Combine
                    [
                     for (id, clusterInfo) in clusters ->
@@ -90,8 +114,41 @@ let performClusterization() =
     System.Windows.Forms.Application.Run(chart)
     0
 
+let checkBestCluster() = 
+  let line = 
+     [1..25]
+      |> Seq.map (fun k ->
+         let value =
+           [ for _ in 1 .. 10 ->
+             let (clusters, classifier) =
+                let clustering = clusterize distance centroidOf
+                clustering observations1 k
+             AIC observations1 (clusters |> Seq.map snd) ]
+           |> List.average
+         k, value)
+      |> Chart.Line
+  let chart = line.ShowChart()
+  System.Windows.Forms.Application.Run(chart)
+
+
+let (bestClusters, bestClassifier) = 
+    let clustering = clusterize distance centroidOf
+    let k = 10
+    seq {
+      for _i in [1..20] ->
+         clustering observations1 k
+    }
+    |> Seq.minBy (fun (cs, f)-> RSS observations1 (cs|>Seq.map snd))
+ 
 [<EntryPoint>]
 let main argv = 
+    bestClusters|> Seq.iter (fun (id,profile) ->
+            printfn "CLUSTER %i" id
+            profile 
+            |> Array.iteri (fun i value -> 
+               if value > 0.2 then printfn "%16s %.1f" headers.[i] value))
+    ignore (Console.ReadLine())
+    ignore (checkBestCluster())
     ignore (performClusterization())
     printfn "%16s %8s %8s %8s" "Tag Name" "Avg" "Min" "Max"
     headers|> Array.iteri (fun i name->
