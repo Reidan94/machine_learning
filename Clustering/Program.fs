@@ -17,6 +17,7 @@ Control.LinearAlgebraProvider <- MklLinearAlgebraProvider()
 let folder = __SOURCE_DIRECTORY__
 let file = "userprofiles-toptags.txt"
 let headers, observations = 
+    let random = System.Random()
     let raw = folder + "/"+file|>File.ReadAllLines
     let headers = (raw.[0].Split ',').[1..]
     let observations = raw.[1..]|>Array.map (fun line-> (line.Split ',').[1..])|>Array.map (Array.map float)
@@ -36,6 +37,35 @@ let observations1 = observations
 
 let labels = ChartTypes.LabelStyle(Interval=0.25)
 
+let covarianceMatrix(M:Matrix<float>) = 
+    let cols = M.ColumnCount
+    let C = DenseMatrix.create cols cols Matrix.Zero
+    for c1 in 0 .. (cols-1) do
+        C.[c1,c1] <- Statistics.Statistics.Variance (M.Column c1)
+        for c2 in (c1+1)..(cols-1) do
+            let cov = Statistics.Statistics.Covariance(M.Column c1, M.Column c2)
+            C.[c1,c2] <- cov
+            C.[c2,c1] <- cov
+    C
+
+let normalize dim (observation:float[][]) = 
+    let averages = 
+        Array.init dim (fun i ->  
+              observations
+              |> Seq.averageBy (fun x->x.[i]))
+
+    let stdDevs = 
+        Array.init dim (fun i -> 
+              let avg = averages.[i]
+              observations
+              |> Seq.averageBy (fun x ->
+                  pown (float x.[i] - avg) 2 |> sqrt))
+
+    observations
+    |> Array.map (fun row ->
+           row
+           |> Array.mapi (fun i x ->
+                    (float x - averages.[i])/stdDevs.[i]))
 
 let pickFrom size k = 
     let rng = System.Random()
@@ -46,7 +76,7 @@ let pickFrom size k =
         else pick set
     pick Set.empty |>Seq.toArray
 
-let initialize observations k = 
+let initialize observations k =
     let size = observations|>Array.length
     let centroids = pickFrom size k|> Array.mapi (fun i index -> i+1, observations.[index])
     let assignments = observations|>Array.map (fun x-> 0, x)
@@ -130,19 +160,110 @@ let checkBestCluster() =
   let chart = line.ShowChart()
   System.Windows.Forms.Application.Run(chart)
 
-
-//let (bestClusters, bestClassifier) = 
+//let( bestClusters, bestClassifier) = 
 //    let clustering = clusterize distance centroidOf
 //    let k = 10
 //    seq {
-//      for _i in [1..20] ->
+//      for _i in [1..5] ->
 //         clustering observations1 k
 //    }
 //    |> Seq.minBy (fun (cs, f)-> RSS observations1 (cs|>Seq.map snd))
  
 open MathNet.Numerics.Statistics
+open MathNet.Numerics.LinearAlgebra
+
+let pca (observations:float[][]) =
+    let factorization = 
+        observations
+        |> Matrix.Build.DenseOfRowArrays
+        |> covarianceMatrix
+        |> Matrix.eigen
+     
+    let eigenValues = factorization.EigenValues
+    let eigenVectors = factorization.EigenVectors
+
+    let projector (obs:float[]) = 
+        let obsVector = obs |> Vector.Build.DenseOfArray
+        (eigenVectors.Transpose() * obsVector)
+        |> Vector.toArray
+    (eigenValues, eigenVectors), projector  
+ 
+let scale(row:float[]) = 
+    let min = row|>Array.min
+    let max = row|>Array.max
+
+    if min = max then row 
+    else
+        row|> Array.map(fun x -> (x - min) / (max-min))
+
+let test = observations.[..99] |> Array.map scale
+let train = observations.[100..] |> Array.map scale
+
+let distance2 (row1:float[]) (row2:float[]) =
+    (row1, row2)
+    ||> Array.map2 (fun x y -> pown (x-y) 2)
+    |> Array.sum
+
+let similarity(row1:float[]) (row2:float[]) =
+    1./(1. + distance row1 row2)
+
+let split(row:float[]) = 
+    row.[1..19],row.[20..]
+
+let weights(values:float[]) = 
+    let total = values|> Array.sum
+    values|> Array.map(fun x->x/total)
+
+let predict(row:float[]) = 
+    let known, unknown = row |> split
+    let similarities = 
+        train
+        |> Array.map (fun example ->
+            let common , _ = example |> split
+            similarity known common)|> weights
+
+    [| for i in 20..29 -> 
+           let column = train|> Array.map (fun x -> x.[i])
+           let prediction = 
+             (similarities, column) 
+             ||> Array.map2 (fun s v -> s*v)
+             |> Array.sum
+           prediction |]
+
+let validation() =  
+    test
+    |> Array.map (fun obs ->
+        let actual = obs|>split|>snd
+        let predicted = obs|> predict
+        let recommended,observed = 
+            Array.zip predicted actual
+            |> Array.maxBy fst
+        if observed > 0. then 1. else 0.)
+    |> Array.average
+    |> printfn "Correct cals %.3f"
+    ()
+
 [<EntryPoint>]
 let main argv =
+    let targetTags = headers.[20..]
+    let rez = predict test.[0] |> Array.zip targetTags
+    validation()
+    ignore(Console.ReadLine())
+    let normalized = normalize (headers.Length) observations
+    let (eValues, eVectors), projector = pca normalized   
+    let project = projector observations.[1]
+    let total = eValues|> Seq.sumBy (fun x -> x.Magnitude)
+    eValues
+    |> Vector.toList
+    |> List.rev
+    |> List.scan (fun (percent, cumul) value ->
+            let percent = 100. * value.Magnitude / total
+            let cumul = cumul+percent
+            (percent, cumul))(0.,0.)
+    |> List.tail
+    |> List.iteri (fun i (p,c) -> printfn "Feat %2i: %.2f%% (%.2f%%)" i p c)
+
+    ignore (Console.ReadLine())
     let feats = headers.Length
     let correlations =
      observations

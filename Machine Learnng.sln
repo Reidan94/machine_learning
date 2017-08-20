@@ -17,6 +17,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LinearRegression", "LinearA
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Clustering", "Clustering\Clustering.fsproj", "{B277A9C4-4DF5-470D-991D-C9BCC6A67E43}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DecisionTrees", "DecisionTrees\DecisionTrees.fsproj", "{92922044-7F0E-4A2D-B45D-A47F4FCA0824}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{B277A9C4-4DF5-470D-991D-C9BCC6A67E43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B277A9C4-4DF5-470D-991D-C9BCC6A67E43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B277A9C4-4DF5-470D-991D-C9BCC6A67E43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92922044-7F0E-4A2D-B45D-A47F4FCA0824}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92922044-7F0E-4A2D-B45D-A47F4FCA0824}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92922044-7F0E-4A2D-B45D-A47F4FCA0824}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92922044-7F0E-4A2D-B45D-A47F4FCA0824}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
